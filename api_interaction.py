@@ -1,6 +1,6 @@
 from pprint import pprint
 import requests
-from config import USERNAME, PASSWORD
+from config.user import USERNAME, PASSWORD
 
 def main():
     session = authentise_login(
@@ -20,7 +20,7 @@ def main():
     if _check_response(response):
         model = response.headers['Location']
         upload_url = response.headers['X-Upload-Location']
-        with open('RhinoBone.stl', 'rb') as f:
+        with open('./models/RhinoBone.stl', 'rb') as f:
             response = session.put(
                 url=upload_url,
                 data=f.read(),

@@ -1,6 +1,8 @@
 from pprint import pprint
 import requests
+import time
 from config.user import USERNAME, PASSWORD
+
 
 def main():
     session = authentise_login(
@@ -18,9 +20,13 @@ def main():
         json=payload
     )
     if _check_response(response):
-        model = response.headers['Location']
-        upload_url = response.headers['X-Upload-Location']
-        with open('./models/RhinoBone.stl', 'rb') as f:
+        # Headers in video seem to be outdated ways of gathering urls,
+        # adjusted to get from json() response and 'resources' sub dict
+        unpacked_response = response.json()['resources'][0]
+        model_url = unpacked_response['uri']
+        upload_url = unpacked_response['upload-location']
+
+        with open('./models/vertebra.stl', 'rb') as f:
             response = session.put(
                 url=upload_url,
                 data=f.read(),
@@ -28,7 +34,25 @@ def main():
                     'Content-Type': 'application/octet-stream'
                 }
             )
-            assert _check_response(response)
+            if _check_response(response):
+                _wait_on_status(
+                    session,
+                    model_url,
+                    ('error', 'processed')
+                )
+
+
+def _wait_on_status(session, url, statuses):
+    data = {'status': ''}
+    while data['status'] not in statuses:
+        response = session.get(url)
+        if _check_response(response):
+            data = response.json()
+            pprint(data)
+            print('-' * 20)
+            time.sleep(0.5)
+    return data
+
 
 def authentise_login(username, password, url='https://users.authentise.com/sessions/'):
     """

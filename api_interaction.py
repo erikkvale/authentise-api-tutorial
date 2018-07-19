@@ -49,8 +49,6 @@ def _wait_on_status(session, url, statuses):
         if _check_response(response):
             data = response.json()
             pprint(data)
-            print('-' * 20)
-            time.sleep(0.5)
     return data
 
 
